@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Photo Forum</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background-image:url("https://dm0qx8t0i9gc9.cloudfront.net/watermarks/image/rDtN98Qoishumwih/white-floral-background_zkKrjnwd_SB_PM.jpg")
+        }
+
+
+        form {
+            margin-bottom: 20px;
+            padding: 50px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 300px;
+        }
+
+        input[type="text"], input[type="file"] {
+            width: 100%;
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+
+        input[type="submit"], button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover, button:hover {
+            background-color: #45a049;
+        }
+
+        #clearPosts {
+            width:200px;
+            background-color: #FF6347;
+        }
+
+        #clearPosts:hover {
+            background-color: #FF4500;
+        }
+
+        #posts {
+            width: 80%;
+            max-width: 800px;
+        }
+
+        .post {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        .post img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+
+        .comments {
+            margin-top: 10px;
+        }
+
+        .commentForm {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .commentForm input[type="text"] {
+            flex-grow: 1;
+            margin-bottom: 5px;
+        }
+
+        .commentForm input[type="submit"] {
+            align-self: flex-start;
+            padding: 5px 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .commentForm input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Photo Forum</h1>
+    <form id="postForm">
+        <label for="title">Title:</label><br>
+        <input type="text" id="title" name="title"><br>
+        <label for="caption">Caption:</label><br>
+        <input type="text" id="caption" name="caption"><br>
+        <label for="file">Choose image:</label><br>
+        <input type="file" id="file" name="file"><br>
+        <input type="submit" value="Post">
+    </form>
+    <button id="clearPosts">Clear All Posts</button>
+    <div id="posts">
+        <!-- Posts will be appended here -->
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            loadPosts();
+
+            document.getElementById('postForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const title = document.getElementById('title').value;
+                const caption = document.getElementById('caption').value;
+                const file = document.getElementById('file').files[0];
+
+                if (!file) {
+                    alert('Please choose an image file.');
+                    return;
+                }
+
+                savePost(title, caption);
+                appendPost(title, caption, []);
+            });
+
+            document.getElementById('clearPosts').addEventListener('click', function() {
+                clearPosts();
+            });
+        });
+
+        function loadPosts() {
+            const savedPosts = JSON.parse(localStorage.getItem('posts')) || [];
+            savedPosts.forEach(post => appendPost(post.title, post.caption, post.comments));
+        }
+
+        function savePost(title, caption) {
+            const savedPosts = JSON.parse(localStorage.getItem('posts')) || [];
+            savedPosts.push({title, caption, comments: []});
+            localStorage.setItem('posts', JSON.stringify(savedPosts));
+        }
+
+        function appendPost(title, caption, comments) {
+            const post = document.createElement('div');
+            post.className = 'post';
+            post.innerHTML = `
+                <h2>${title}</h2>
+                <p>${caption}</p>
+                <img src="" alt="Image">
+                <p>Posted on ${new Date().toLocaleString()}</p>
+                <div class="comments">
+                    <h3>Comments:</h3>
+                    <form class="commentForm">
+                        <input type="text" class="commentText">
+                        <input type="submit" value="Add Comment">
+                    </form>
+                </div>
+            `;
+
+            const img = post.querySelector('img');
+            const file = document.getElementById('file').files[0];
+            if (file) {
+                img.src = URL.createObjectURL(file);
+            }
+
+            comments.forEach(commentText => {
+                const comment = document.createElement('p');
+                comment.textContent = commentText;
+                post.querySelector('.comments').appendChild(comment);
+            });
+
+            post.querySelector('.commentForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const commentText = e.target.querySelector('.commentText').value;
+                const comment = document.createElement('p');
+                comment.textContent = commentText;
+                post.querySelector('.comments').appendChild(comment);
+            });
+
+            document.getElementById('posts').insertBefore(post, document.getElementById('posts').firstChild);
+        }
+
+        function clearPosts() {
+            localStorage.removeItem('posts');
+            document.getElementById('posts').innerHTML = '';
+        }
+    </script>
+</body>
+</html>
